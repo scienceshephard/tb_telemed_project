@@ -10,16 +10,17 @@ import {
   ERecord as PatientERecord,
   BookAppointment as PatientBookAppointment
  } from "./pages/patient";
-import { 
+import {
     Appointments as Appointments,
     Home as DoctorHome,
     Profile as DoctorProfile,
     PatientList as PatientList,
     Consultations as Consultations
    } from "./pages/doctor";
+import { supabase } from './client';
 
 const App = () => {
-  const [token, setToken] = useState(false);
+  const [token, setToken] = useState(null);
 
   // Persist token in sessionStorage
   useEffect(() => {
@@ -28,19 +29,50 @@ const App = () => {
     }
   }, [token]);
 
-  // Restore token on reload
+  // Restore token on reload using Supabase session and subscribe to auth changes
   useEffect(() => {
-    const storedToken = sessionStorage.getItem("token");
-    if (storedToken) {
-      setToken(JSON.parse(storedToken));
+    let subscription = null;
+    async function restore() {
+      try {
+        const sessionResp = await supabase.auth.getSession();
+        const session = sessionResp?.data?.session;
+        const userResp = await supabase.auth.getUser();
+        const user = userResp?.data?.user;
+
+        if (user) {
+          setToken({ user, session });
+        } else {
+          const storedToken = sessionStorage.getItem("token");
+          if (storedToken) setToken(JSON.parse(storedToken));
+        }
+
+        const sub = supabase.auth.onAuthStateChange((_event, nextSession) => {
+          if (nextSession?.user) setToken({ user: nextSession.user, session: nextSession });
+          else setToken(null);
+        });
+
+        subscription = sub?.data?.subscription || sub;
+      } catch (err) {
+        console.warn('Error restoring session:', err);
+      }
     }
+
+    restore();
+
+    return () => {
+      try {
+        subscription?.unsubscribe?.();
+      } catch (e) {
+        // ignore
+      }
+    };
   }, []);
 
   return (
     <Routes>
       {/* ✅ Pass setToken here */}
       <Route path="/" element={<Landing/>} />
-      <Route path="/login" element={<Login setToken={setToken} />} />
+      <Route path="/login" element={<Login setToken={setToken} token = {token} />} />
       <Route path="/SignUpPatient" element={<SignUpPatient />} />
       <Route path="/SignUpDoctor" element={<SignUpDoctor />} />
 
@@ -50,8 +82,8 @@ const App = () => {
         <Route path="symptomchecklist" element={<PatientSymptomChecklist/>}/>
         <Route path="labresults" element={<PatientLabResults token={token}/>}/>
         <Route path="erecord" element={<PatientERecord token={token}/>}/>
-        <Route path="teleconsultation" element={<PatientTeleconsultation/>}/>
-        <Route path="patientbookappointment" element={<PatientBookAppointment/>}/>
+  <Route path="teleconsultation" element={<PatientTeleconsultation token={token}/>}/>
+  <Route path="patientbookappointment" element={<PatientBookAppointment token={token}/>}/>
       </Route>
 
       <Route path="/doctor" element={<DoctorDashboard />}>

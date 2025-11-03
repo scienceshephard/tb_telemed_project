@@ -14,7 +14,7 @@ const Home = ({ token }) => {
       {/* ✅ Hero Section */}
       <section className="bg-green-50 py-10 px-6 text-center">
         <h1 className="text-3xl font-bold text-green-700">
-          Welcome Back, {token.user.user_metadata.full_name} 👋
+          Welcome Back, {token?.user?.user_metadata?.full_name} 👋
         </h1>
         <p className="mt-3 text-lg max-w-2xl mx-auto">
           TB TeleHealth helps you detect tuberculosis symptoms early, consult

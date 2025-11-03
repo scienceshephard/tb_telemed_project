@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { supabase } from "../client";
 import { Link, useNavigate } from "react-router-dom";
 
-const Login = ({ setToken }) => {
+const Login = ({ token, setToken }) => {
   let navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -38,6 +38,7 @@ const Login = ({ setToken }) => {
       console.log("Session:", data.session);
 
       setToken(data);
+      
 
       const role = data.user?.user_metadata?.role;
 

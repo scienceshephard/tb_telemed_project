@@ -12,6 +12,8 @@ export default function PatientProfile({ token }) {
   
   // Use the patient ID from URL if doctor is viewing, otherwise use token user ID
   const userId = isDoctor && id ? id : token?.user?.id;
+  // Resolved user id used for fetches — fall back to supabase auth or sessionStorage
+  const [resolvedUserId, setResolvedUserId] = useState(isDoctor && id ? id : token?.user?.id);
 
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState(null) // Add role state
@@ -27,15 +29,20 @@ export default function PatientProfile({ token }) {
   const [medicalHistory, setMedicalHistory] = useState(null)
   const [avatar_url, setAvatarUrl] = useState(null)
 
-  // Fetch user role
+  // Fetch user role (viewer) — try token first, then supabase auth as a fallback
   useEffect(() => {
     async function fetchRole() {
-      if (!token?.user?.id) return;
-      
+      let viewerId = token?.user?.id;
+      if (!viewerId) {
+        const { data: userData } = await supabase.auth.getUser();
+        viewerId = userData?.user?.id;
+      }
+      if (!viewerId) return;
+
       const { data, error } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", token.user.id)
+        .eq("id", viewerId)
         .single();
 
       if (!error && data) {
@@ -45,6 +52,38 @@ export default function PatientProfile({ token }) {
     fetchRole();
   }, [token]);
 
+  // Resolve the subject user id if it isn't available via props/token
+  useEffect(() => {
+    async function resolveUserId() {
+      if (resolvedUserId) return;
+      // If doctor is viewing and id param is present, use it
+      if (isDoctor && id) {
+        setResolvedUserId(id);
+        return;
+      }
+
+      // Try supabase client
+      const { data: userData } = await supabase.auth.getUser();
+      const maybeId = userData?.user?.id;
+      if (maybeId) {
+        setResolvedUserId(maybeId);
+        return;
+      }
+
+      // Finally try sessionStorage (best-effort)
+      try {
+        const stored = sessionStorage.getItem('token');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.user?.id) setResolvedUserId(parsed.user.id);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    resolveUserId();
+  }, [resolvedUserId, token, id, isDoctor]);
+
   useEffect(() => {
     let ignore = false
     async function getProfile() {
@@ -53,7 +92,7 @@ export default function PatientProfile({ token }) {
       const { data, error } = await supabase
         .from('patient_profiles')
         .select(`full_name, age, gender, phone, marital_status, household_size, occupation, living_condition, travel_history, medical_history, avatar_url`)
-        .eq('user_id', userId)
+        .eq('user_id', resolvedUserId)
         .single()
 
       if (!ignore) {
@@ -77,7 +116,7 @@ export default function PatientProfile({ token }) {
       setLoading(false)
     }
 
-    if (token && userId) {
+    if (resolvedUserId) {
       getProfile()
     }
 
@@ -92,7 +131,7 @@ export default function PatientProfile({ token }) {
     setLoading(true)
 
     const updates = {
-      user_id: userId,
+      user_id: resolvedUserId,
       full_name: fullName,
       age: parseInt(age, 10),
       gender: gender,
@@ -118,8 +157,8 @@ export default function PatientProfile({ token }) {
     setLoading(false)
   }
 
-  // Add loading check for token
-  if (!token || !userId) {
+  // Add loading check for token / resolved user id
+  if (!resolvedUserId) {
     return <div>Loading...</div>
   }
 
@@ -151,7 +190,7 @@ export default function PatientProfile({ token }) {
             <input 
               id="email" 
               type="text" 
-              value={token.user.email} 
+              value={token?.user?.email} 
               disabled 
               className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
             />

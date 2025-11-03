@@ -25,7 +25,7 @@ export default function ERecords({ token }) {
       const { data, error } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", token.user.id)
+        .eq("id", token?.user?.id)
         .single();
 
       if (!error && data) {
@@ -83,7 +83,7 @@ export default function ERecords({ token }) {
           .from('e_records')
           .insert([{
             patient_id: patientId,
-            doctor_id: token.user.id,
+            doctor_id: token?.user?.id,
             prescriptions,
             notes
           }])

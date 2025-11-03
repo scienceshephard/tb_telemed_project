@@ -29,26 +29,49 @@ export default function BookAppointment({ token }) {
 
     const appointmentDateTime = new Date(`${date}T${time}`);
 
-    const { error } = await supabase.from("appointments").insert([
-      {
-        patient_id: token.user.id,
+    try {
+      // Use Supabase client auth to get the current user so RLS WITH CHECK passes
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) console.error('Error fetching supabase user:', userError);
+
+      const user = userData?.user;
+      console.log('supabase user:', user, 'token prop:', token);
+
+      if (!user) {
+        alert('You must be signed in to book an appointment.');
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        patient_id: user.id,
         doctor_id: doctorId,
         appointment_date: appointmentDateTime,
+        appointment_time: time,
         reason,
-        status: "pending",
-      },
-    ]);
+        status: 'pending',
+      };
 
-    if (error) alert(error.message);
-    else {
-      alert("Appointment booked successfully!");
-      setDate("");
-      setTime("");
-      setReason("");
-      setDoctorId("");
+      console.log('inserting appointment payload:', payload);
+
+      const { error } = await supabase.from('appointments').insert([payload]);
+
+      if (error) {
+        console.error('Insert error:', error);
+        alert('Error booking appointment: ' + error.message);
+      } else {
+        alert('Appointment booked successfully!');
+        setDate('');
+        setTime('');
+        setReason('');
+        setDoctorId('');
+      }
+    } catch (err) {
+      console.error('Unexpected error booking appointment:', err);
+      alert('Unexpected error: ' + err.message);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (

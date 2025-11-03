@@ -7,21 +7,61 @@ export default function Teleconsultation({ token }) {
 
   useEffect(() => {
     async function fetchAppointments() {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("id, appointment_date, status, doctor_id, doctor:profiles(full_name)")
-        .eq("patient_id", token.user.id)
-        .order("appointment_date", { ascending: true });
+      try {
+        // Ensure we have the current authenticated user
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) console.error('Error getting supabase user:', userError);
 
-      if (error) console.error(error);
-      else setAppointments(data);
+        const user = userData?.user;
+        if (!user) {
+          console.warn('No authenticated user available for fetching appointments');
+          setLoading(false);
+          return;
+        }
 
-      setLoading(false);
+        // First fetch appointments for the patient
+        const { data: apps, error: appsError } = await supabase
+          .from('appointments')
+          .select('id, appointment_date, status, doctor_id')
+          .eq('patient_id', user.id)
+          .order('appointment_date', { ascending: true });
+
+        if (appsError) throw appsError;
+
+        // If there are doctor_ids, fetch doctor profiles in one query
+        const doctorIds = Array.from(new Set(apps.map((a) => a.doctor_id).filter(Boolean)));
+        let doctorsMap = {};
+
+        if (doctorIds.length > 0) {
+          const { data: docs, error: docsError } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', doctorIds);
+
+          if (docsError) throw docsError;
+
+          doctorsMap = docs.reduce((acc, d) => ({ ...acc, [d.id]: d }), {});
+        }
+
+        // Attach doctor info to appointments for rendering
+        const withDoctor = apps.map((a) => ({
+          ...a,
+          doctor: doctorsMap[a.doctor_id] || { id: a.doctor_id, full_name: 'Unknown' },
+        }));
+
+        setAppointments(withDoctor);
+        console.log('appointments loaded', withDoctor);
+      } catch (err) {
+        console.error('Error fetching appointments or doctors:', err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchAppointments();
   }, [token]);
 
+  
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md">
       <h2 className="text-2xl font-bold text-green-600 mb-4">Upcoming Teleconsultations</h2>
