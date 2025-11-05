@@ -29,12 +29,39 @@ export default function BookAppointment({ token }) {
 
     const appointmentDateTime = new Date(`${date}T${time}`);
 
+
+    
     try {
       // Use Supabase client auth to get the current user so RLS WITH CHECK passes
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError) console.error('Error fetching supabase user:', userError);
 
       const user = userData?.user;
+      
+      //testing something
+      console.log('Selected doctor id', doctorId);
+      console.log('patient id: ', user?.id);
+       const { data: selectedDoctor } = await supabase
+      .from('profiles')
+      .select('id, full_name, role')
+      .eq('id', doctorId)
+      .single();
+ console.log('✅ Selected Doctor Profile:', selectedDoctor);
+
+    const yload = {
+      patient_id: user.id,
+      doctor_id: doctorId,
+      appointment_date: date,
+      appointment_time: time,
+      reason,
+      status: 'pending',
+    };
+    console.log('📤 Inserting appointment payload:', yload);
+
+      //testing ends
+      
+
+      
       console.log('supabase user:', user, 'token prop:', token);
 
       if (!user) {
@@ -42,7 +69,7 @@ export default function BookAppointment({ token }) {
         setLoading(false);
         return;
       }
-
+      
       const payload = {
         patient_id: user.id,
         doctor_id: doctorId,

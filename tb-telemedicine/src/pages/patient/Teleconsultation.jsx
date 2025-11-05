@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom'
 import { supabase } from "../../client";
 
 export default function Teleconsultation({ token }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchAppointments() {
@@ -22,9 +24,10 @@ export default function Teleconsultation({ token }) {
         // First fetch appointments for the patient
         const { data: apps, error: appsError } = await supabase
           .from('appointments')
-          .select('id, appointment_date, status, doctor_id')
+          .select('id, appointment_date, appointment_time, status, doctor_id')
           .eq('patient_id', user.id)
           .order('appointment_date', { ascending: true });
+console.log('apps: ', apps);
 
         if (appsError) throw appsError;
 
@@ -84,17 +87,41 @@ export default function Teleconsultation({ token }) {
               <tr key={app.id}>
                 <td className="border px-2 py-1">{app.doctor.full_name}</td>
                 <td className="border px-2 py-1">
-                  {new Date(app.appointment_date).toLocaleString()}
+                  {(() => {
+                    try {
+                      const d = app.appointment_date;
+                      const t = app.appointment_time;
+                      if (d && typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && t) {
+                        return new Date(`${d}T${t}`).toLocaleString();
+                      }
+                      if (d) {
+                        const dt = new Date(d);
+                        return isNaN(dt.getTime()) ? String(d) : dt.toLocaleString();
+                      }
+                    } catch (e) {
+                      console.warn('Error formatting appointment date', e);
+                    }
+                    return 'Unknown';
+                  })()}
                 </td>
                 <td className="border px-2 py-1">{app.status}</td>
                 <td className="border px-2 py-1">
-                  <button
-                    className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
-                    // replace with real video link later
-                    onClick={() => alert("Join consultation (placeholder)")}
-                  >
-                    Join
-                  </button>
+                  {app.status === 'approved' ? (
+                    <button
+                      className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
+                      onClick={() => navigate(`/patient/teleconsultation/${app.id}/room`)}
+                    >
+                      Join
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      title="Waiting for doctor to confirm"
+                      className="bg-gray-300 text-gray-600 px-3 py-1 rounded-md cursor-not-allowed"
+                    >
+                      Join
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
