@@ -157,56 +157,92 @@ export default function VideoChat({ roomName, displayName, onHangup, isDoctor })
     setError(null);
 
     try {
+      console.log('Starting to join room:', roomName);
+      
       // Initialize media
-      await initializeMedia();
+      const stream = await initializeMedia();
+      console.log('Media initialized successfully');
 
       // Create peer connection
       createPeerConnection();
+      console.log('Peer connection created');
 
-      // Subscribe to signaling channel
-      const channel = supabase.channel(`video-room-${roomName}`);
+      // Subscribe to signaling channel using Supabase Realtime
+      const channel = supabase.channel(`video-room-${roomName}`, {
+        config: {
+          broadcast: { self: false },
+        },
+      });
       
+      // Listen for signaling messages
       channel.on('broadcast', { event: 'signal' }, ({ payload }) => {
+        console.log('Received signal from:', payload.sender);
         if (payload.sender !== displayName) {
           handleSignal(payload.signal);
         }
       });
 
-      await channel.subscribe();
-      channelRef.current = channel;
+      // Subscribe to the channel
+      await channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to channel');
+          
+          // Create and send offer (initiator creates offer)
+          const pc = peerConnectionRef.current;
+          if (pc) {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            
+            // Broadcast offer
+            channel.send({
+              type: 'broadcast',
+              event: 'signal',
+              payload: {
+                sender: displayName,
+                signal: {
+                  type: 'offer',
+                  offer: pc.localDescription,
+                },
+              },
+            });
 
-      // Create and send offer (first person to join creates offer)
-      const pc = peerConnectionRef.current;
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      
-      // Broadcast offer
-      await channel.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: {
-          sender: displayName,
-          signal: {
-            type: 'offer',
-            offer: pc.localDescription,
-          },
-        },
+            console.log('Offer sent, waiting for answer...');
+          }
+        }
       });
 
+      channelRef.current = channel;
       setShowPrejoin(false);
+      setIsJoining(false);
       console.log('Successfully joined room');
+      
     } catch (err) {
       console.error('Error joining room:', err);
       setError('Failed to join room: ' + err.message);
       setIsJoining(false);
+      
+      // Clean up on error
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
     }
   }
 
   // Leave the room
   function leaveRoom() {
+    console.log('Leaving room...');
+    
     // Stop local stream
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('Stopped track:', track.kind);
+      });
       localStreamRef.current = null;
     }
 
@@ -214,18 +250,21 @@ export default function VideoChat({ roomName, displayName, onHangup, isDoctor })
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
+      console.log('Closed peer connection');
     }
 
     // Unsubscribe from channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+      console.log('Unsubscribed from channel');
     }
 
     setIsConnected(false);
     setShowPrejoin(true);
     
     if (typeof onHangup === 'function') {
+      console.log('Calling onHangup callback');
       onHangup();
     }
   }
@@ -252,10 +291,77 @@ export default function VideoChat({ roomName, displayName, onHangup, isDoctor })
     }
   }
 
+  // Initialize preview stream when component mounts
+  useEffect(() => {
+    async function initPreview() {
+      if (showPrejoin) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: true,
+          });
+
+          localStreamRef.current = stream;
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+
+          // Apply initial mute states
+          stream.getAudioTracks().forEach(track => {
+            track.enabled = !audioMuted;
+          });
+          stream.getVideoTracks().forEach(track => {
+            track.enabled = !videoMuted;
+          });
+        } catch (err) {
+          console.error('Error initializing preview:', err);
+          setError('Could not access camera/microphone. Please check permissions.');
+        }
+      }
+    }
+
+    initPreview();
+  }, [showPrejoin]);
+
+  // Update track states when mute buttons are toggled during prejoin
+  useEffect(() => {
+    if (localStreamRef.current && showPrejoin) {
+      localStreamRef.current.getAudioTracks().forEach(track => {
+        track.enabled = !audioMuted;
+      });
+    }
+  }, [audioMuted, showPrejoin]);
+
+  useEffect(() => {
+    if (localStreamRef.current && showPrejoin) {
+      localStreamRef.current.getVideoTracks().forEach(track => {
+        track.enabled = !videoMuted;
+      });
+    }
+  }, [videoMuted, showPrejoin]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      leaveRoom();
+      console.log('Component unmounting, cleaning up...');
+      
+      // Stop local stream
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+
+      // Close peer connection
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
+
+      // Unsubscribe from channel
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, []);
 
@@ -391,7 +497,16 @@ export default function VideoChat({ roomName, displayName, onHangup, isDoctor })
                   🎥 Join Now
                 </button>
                 <button
-                  onClick={() => { if (typeof onHangup === 'function') onHangup(); }}
+                  onClick={() => {
+                    // Stop any preview streams
+                    if (localStreamRef.current) {
+                      localStreamRef.current.getTracks().forEach(track => track.stop());
+                      localStreamRef.current = null;
+                    }
+                    if (typeof onHangup === 'function') {
+                      onHangup();
+                    }
+                  }}
                   className="px-6 py-3 rounded-lg bg-gray-200 hover:bg-gray-300 transition font-medium"
                 >
                   Cancel
