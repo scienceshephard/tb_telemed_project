@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../client';
@@ -76,9 +77,8 @@ const Appointments = () => {
         setLoading(true);
         setError(null);
 
-        console.log('🔍 Fetching doctor appointments...');
+        console.log('📋 Fetching doctor appointments...');
 
-        // Step 1: Get current doctor
         const { data: userData, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
@@ -98,7 +98,6 @@ const Appointments = () => {
         const doctorId = userData.user.id;
         console.log('✅ Doctor ID:', doctorId);
 
-        // Step 2: Fetch ALL appointments for this doctor
         const { data: appointmentsData, error: appointmentsError } = await supabase
           .from('appointments')
           .select('*')
@@ -123,15 +122,12 @@ const Appointments = () => {
 
         console.log(`✅ Found ${appointmentsData.length} appointment(s)`);
 
-        // Step 3: Get unique patient IDs
         const patientIds = [...new Set(appointmentsData.map(a => a.patient_id).filter(Boolean))];
         console.log('👥 Patient IDs:', patientIds);
 
-        // Step 4: Fetch patient names (with fallback strategy)
         let patientsMap = {};
 
         if (patientIds.length > 0) {
-          // Try patient_profiles first
           const { data: patientProfiles, error: ppError } = await supabase
             .from('patient_profiles')
             .select('user_id, full_name')
@@ -147,10 +143,9 @@ const Appointments = () => {
             });
           }
 
-          // Fallback to profiles table for any missing names
           const missingIds = patientIds.filter(id => !patientsMap[id]);
           if (missingIds.length > 0) {
-            console.log('🔄 Trying profiles table for missing IDs:', missingIds);
+            console.log('📄 Trying profiles table for missing IDs:', missingIds);
             
             const { data: profiles, error: pError } = await supabase
               .from('profiles')
@@ -169,7 +164,6 @@ const Appointments = () => {
 
         console.log('👤 Final patients map:', patientsMap);
 
-        // Step 5: Fetch lab results
         let labResultsMap = {};
         if (patientIds.length > 0) {
           const { data: labs, error: labsError } = await supabase
@@ -182,7 +176,6 @@ const Appointments = () => {
           }
         }
 
-        // Step 6: Enrich appointments with patient info
         const enriched = appointmentsData.map((a) => {
           const patientName = patientsMap[a.patient_id];
           return {
@@ -205,7 +198,6 @@ const Appointments = () => {
 
     fetchAppointments();
 
-    // Real-time subscription
     const subscription = supabase
       .channel('appointment-changes')
       .on('postgres_changes', {
@@ -335,15 +327,23 @@ const Appointments = () => {
                 </div>
               )}
 
-              {/* Action buttons */}
-              <div className="mt-3 flex gap-2">
+              {/* Action buttons with CHAT */}
+              <div className="mt-3 flex gap-2 flex-wrap">
+                {/* Chat Button - Always Available */}
+                <button
+                  onClick={() => navigate(`/doctor/chat/${appointment.id}`)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+                >
+                  💬 Chat
+                </button>
+
                 {appointment.status === 'pending' && (
                   <>
                     <button
                       onClick={() => updateAppointmentStatus(appointment.id, 'approved')}
                       className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium"
                     >
-                      ✓ approved
+                      ✓ Approve
                     </button>
                     <button
                       onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
@@ -355,12 +355,20 @@ const Appointments = () => {
                 )}
 
                 {appointment.status === 'approved' && (
-                  <button
-                    onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium"
-                  >
-                    ✓ Mark Complete
-                  </button>
+                  <>
+                    <button
+                      onClick={() => navigate(`/doctor/consultations/room/${appointment.id}`)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium"
+                    >
+                      🎥 Join Video Call
+                    </button>
+                    <button
+                      onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium"
+                    >
+                      ✓ Mark Complete
+                    </button>
+                  </>
                 )}
 
                 {appointment.status === 'completed' && (

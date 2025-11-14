@@ -1,3 +1,6 @@
+// DoctorVideoChatWrapper.jsx
+// Copy to: src/pages/doctor/DoctorVideoChatWrapper.jsx
+
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import VideoChat from '../../components/VideoChat'
@@ -7,6 +10,7 @@ export default function DoctorVideoChatWrapper({ token }) {
   const { appointmentId } = useParams()
   const navigate = useNavigate()
   const [appointment, setAppointment] = useState(null)
+  const [patientInfo, setPatientInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
 
@@ -14,6 +18,8 @@ export default function DoctorVideoChatWrapper({ token }) {
     let mounted = true
     async function load() {
       setLoading(true)
+      
+      // Fetch appointment
       const { data, error } = await supabase
         .from('appointments')
         .select('id, patient_id, doctor_id, status')
@@ -29,11 +35,33 @@ export default function DoctorVideoChatWrapper({ token }) {
 
       setAppointment(data)
 
-      // resolve current user id
+      // Fetch patient info
+      const { data: patientData, error: patientError } = await supabase
+        .from('patient_profiles')
+        .select('user_id, full_name')
+        .eq('user_id', data.patient_id)
+        .single()
+
+      if (!patientError && patientData) {
+        setPatientInfo(patientData)
+      } else {
+        // Fallback to profiles table
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('id', data.patient_id)
+          .single()
+        
+        if (profileData) {
+          setPatientInfo({ user_id: profileData.id, full_name: profileData.full_name })
+        }
+      }
+
+      // Resolve current user id
       const userResp = await supabase.auth.getUser()
       const currentId = userResp?.data?.user?.id || token?.user?.id
 
-      // basic client-side guard: user must be the doctor on the appointment
+      // Basic client-side guard
       if (currentId && currentId === data.doctor_id) {
         setAuthorized(true)
       } else {
@@ -50,7 +78,6 @@ export default function DoctorVideoChatWrapper({ token }) {
   }, [appointmentId, token])
 
   function handleHangup() {
-    // Navigate back to consultations page
     navigate('/doctor/consultations')
   }
 
@@ -131,6 +158,10 @@ export default function DoctorVideoChatWrapper({ token }) {
       displayName={displayName} 
       onHangup={handleHangup}
       isDoctor={true}
+      appointmentId={appointment.id}
+      currentUserId={token?.user?.id}
+      otherUserId={appointment.patient_id}
+      otherUserName={patientInfo?.full_name || 'Patient'}
     />
   )
 }

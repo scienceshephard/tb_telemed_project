@@ -10,7 +10,7 @@ import {
   ERecord as PatientERecord,
   BookAppointment as PatientBookAppointment
  } from "./pages/patient";
-// import PatientVideoChat from './pages/patient/VideoChatWrapper'
+
 import {
     Appointments as Appointments,
     Home as DoctorHome,
@@ -21,6 +21,7 @@ import {
 import { supabase } from './client';
 import VideoChatWrapper from "./pages/patient/VideoChatWrapper";
 import DoctorVideoChatWrapper from "./pages/doctor/DoctorVideoChatWrapper";
+import ChatPage from "./pages/ChatPage";
 
 const App = () => {
   const [token, setToken] = useState(null);
@@ -85,9 +86,10 @@ const App = () => {
         <Route path="symptomchecklist" element={<PatientSymptomChecklist/>}/>
         <Route path="labresults" element={<PatientLabResults token={token}/>}/>
         <Route path="erecord" element={<PatientERecord token={token}/>}/>
-  <Route path="teleconsultation" element={<PatientTeleconsultation token={token}/>}/>
-  <Route path="teleconsultation/:appointmentId/room" element={<VideoChatWrapper token={token} />} />
-  <Route path="patientbookappointment" element={<PatientBookAppointment token={token}/>}/>
+        <Route path="teleconsultation" element={<PatientTeleconsultation token={token}/>}/>
+        <Route path="teleconsultation/:appointmentId/room" element={<VideoChatWrapper token={token} />} />
+        <Route path="chat/:appointmentId" element={<ChatPage token={token} />} />
+        <Route path="patientbookappointment" element={<PatientBookAppointment token={token}/>}/>
       </Route>
 
       <Route path="/doctor" element={<DoctorDashboard />}>
@@ -95,7 +97,8 @@ const App = () => {
         <Route path="profile" element={< DoctorProfile token={token} />} />
         <Route path="appointments" element={< Appointments/>} />
         <Route path="consultations" element={< Consultations />} />
-  <Route path="consultations/room/:appointmentId" element={<DoctorVideoChatWrapper token={token} />} />
+         <Route path="chat/:appointmentId" element={<ChatPage token={token} />} />
+        <Route path="consultations/room/:appointmentId" element={<DoctorVideoChatWrapper token={token} />} />
         <Route path="patientlist" element={< PatientList />} />
           {/* ✅ New doctor routes for patient detail views */}
         <Route path="patient/:id/patientprofile" element={<PatientProfile token={token} />} /> 

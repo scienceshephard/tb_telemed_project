@@ -7,6 +7,7 @@ export default function VideoChatWrapper({ token }) {
   const { appointmentId } = useParams()
   const navigate = useNavigate()
   const [appointment, setAppointment] = useState(null)
+  const [doctorInfo, setDoctorInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
 
@@ -14,6 +15,8 @@ export default function VideoChatWrapper({ token }) {
     let mounted = true
     async function load() {
       setLoading(true)
+      
+      // Fetch appointment
       const { data, error } = await supabase
         .from('appointments')
         .select('id, patient_id, doctor_id, status')
@@ -29,11 +32,22 @@ export default function VideoChatWrapper({ token }) {
 
       setAppointment(data)
 
-      // resolve current user id
+      // Fetch doctor info
+      const { data: doctorData, error: doctorError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('id', data.doctor_id)
+        .single()
+
+      if (!doctorError && doctorData) {
+        setDoctorInfo(doctorData)
+      }
+
+      // Resolve current user id
       const userResp = await supabase.auth.getUser()
       const currentId = userResp?.data?.user?.id || token?.user?.id
 
-      // basic client-side guard: user must be patient or doctor on the appointment
+      // Basic client-side guard
       if (currentId && (currentId === data.patient_id || currentId === data.doctor_id)) {
         setAuthorized(true)
       } else {
@@ -50,7 +64,6 @@ export default function VideoChatWrapper({ token }) {
   }, [appointmentId, token])
 
   function handleHangup() {
-    // Navigate back to teleconsultation page
     navigate('/patient/teleconsultation')
   }
 
@@ -130,6 +143,10 @@ export default function VideoChatWrapper({ token }) {
       displayName={displayName} 
       onHangup={handleHangup}
       isDoctor={false}
+      appointmentId={appointment.id}
+      currentUserId={token?.user?.id}
+      otherUserId={appointment.doctor_id}
+      otherUserName={doctorInfo?.full_name || 'Doctor'}
     />
   )
 }

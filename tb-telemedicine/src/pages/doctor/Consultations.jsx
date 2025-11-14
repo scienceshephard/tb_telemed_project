@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../client';
@@ -14,7 +15,7 @@ const Consultations = () => {
   async function fetchApprovedAppointments() {
     try {
       setLoading(true);
-      console.log('🔍 Fetching approved appointments for consultations...');
+      console.log('📋 Fetching approved appointments for consultations...');
       
       const { data: userData } = await supabase.auth.getUser();
       
@@ -26,20 +27,12 @@ const Consultations = () => {
 
       console.log('👨‍⚕️ Doctor ID:', userData.user.id);
 
-      // Use JOIN to get patient names properly
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          id, 
-          appointment_date, 
-          appointment_time, 
-          status, 
-          patient_id
-        `)
+        .select('id, appointment_date, appointment_time, status, patient_id')
         .eq('doctor_id', userData.user.id)
         .eq('status', 'approved')
         .order('appointment_date', { ascending: true });
-          console.log('ss',data);
           
       if (error) {
         console.error('❌ Error fetching approved appointments:', error);
@@ -47,13 +40,50 @@ const Consultations = () => {
         return;
       }
 
-      console.log('✅ Approved appointments with patient data:', data);
+      console.log('✅ Approved appointments:', data);
       
-      // Process the data to handle patient names properly
+      // Fetch patient names
+      const patientIds = [...new Set(data.map(a => a.patient_id).filter(Boolean))];
+      let patientsMap = {};
+
+      if (patientIds.length > 0) {
+        // Try patient_profiles first
+        const { data: patientProfiles } = await supabase
+          .from('patient_profiles')
+          .select('user_id, full_name')
+          .in('user_id', patientIds);
+
+        if (patientProfiles) {
+          patientProfiles.forEach(p => {
+            if (p.user_id && p.full_name) {
+              patientsMap[p.user_id] = p.full_name;
+            }
+          });
+        }
+
+        // Fallback to profiles table for missing names
+        const missingIds = patientIds.filter(id => !patientsMap[id]);
+        if (missingIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', missingIds);
+
+          if (profiles) {
+            profiles.forEach(p => {
+              if (p.id && p.full_name && !patientsMap[p.id]) {
+                patientsMap[p.id] = p.full_name;
+              }
+            });
+          }
+        }
+      }
+
+      // Process appointments with patient names
       const processedAppointments = data.map(appointment => ({
         ...appointment,
         patient: {
-          full_name: appointment.patient?.full_name || `Patient (ID: ${appointment.patient_id?.substring(0, 8)}...)`
+          full_name: patientsMap[appointment.patient_id] || `Patient (ID: ${appointment.patient_id?.substring(0, 8)}...)`
         }
       }));
 
@@ -141,16 +171,26 @@ const Consultations = () => {
               </div>
               
               <div className="flex gap-3">
+                {/* Chat Button */}
+                <button
+                  onClick={() => navigate(`/doctor/chat/${appointment.id}`)}
+                  className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  💬 Chat with Patient
+                </button>
+
+                {/* Video Call Button */}
                 <button
                   onClick={() => navigate(`/doctor/consultations/room/${appointment.id}`)}
                   className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center justify-center gap-2"
                 >
-                  🎥 Join Video Consultation
+                  🎥 Join Video Call
                 </button>
                 
+                {/* View Patient Button */}
                 <button
                   onClick={() => navigate(`/doctor/patient/${appointment.patient_id}/patientprofile`)}
-                  className="bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                  className="bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 font-medium transition-colors"
                 >
                   👤 View Patient
                 </button>
