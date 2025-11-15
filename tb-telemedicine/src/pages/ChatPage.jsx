@@ -1,6 +1,3 @@
-// ChatPage.jsx - Updated to pass current user name
-// Copy to: src/pages/ChatPage.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../client';

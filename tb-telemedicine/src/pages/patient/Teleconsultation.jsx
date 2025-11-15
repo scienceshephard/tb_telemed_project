@@ -1,6 +1,3 @@
-// Teleconsultation.jsx - Updated with chat button
-// Copy to: src/pages/patient/Teleconsultation.jsx
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom'
 import { supabase } from "../../client";
