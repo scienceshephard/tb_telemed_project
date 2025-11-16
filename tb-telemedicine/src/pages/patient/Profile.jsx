@@ -216,32 +216,32 @@ export default function PatientProfile({ token }) {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
+          <p className="mt-4 text-sm md:text-base text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 py-8">
-      <div className="w-full max-w-2xl p-6 bg-white rounded-2xl shadow-md">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 py-4 md:py-8 px-4">
+      <div className="w-full max-w-2xl p-4 md:p-6 bg-white rounded-2xl shadow-md">
         {/* Header with status indicator */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-center text-green-600">
+        <div className="mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-semibold text-center text-green-600">
             {isDoctor ? 'Patient Profile (View Only)' : 'Patient Profile'}
           </h2>
           {!profileExists && !isDoctor && (
-            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 text-sm text-center">
+            <div className="mt-2 md:mt-3 p-2 md:p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-xs md:text-sm text-yellow-800 text-center">
                 ⚠️ Please complete your profile to continue using the platform
               </p>
             </div>
           )}
         </div>
 
-        <form onSubmit={updateProfile} className="space-y-4">
+        <form onSubmit={updateProfile} className="space-y-3 md:space-y-4">
           {/* Avatar Section */}
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-3 md:space-y-4">
             <Avatar
               url={avatar_url}
               size={150}
@@ -253,8 +253,8 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Email Field */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="email">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="email">
               Email
             </label>
             <input 
@@ -262,13 +262,13 @@ export default function PatientProfile({ token }) {
               type="text" 
               value={patientEmail || token?.user?.email || ''} 
               disabled 
-              className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
+              className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed text-sm md:text-base"
             />
           </div>
 
           {/* Full Name */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="fullName">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="fullName">
               Full Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -278,7 +278,7 @@ export default function PatientProfile({ token }) {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
               }`}
               placeholder="Enter your full name"
@@ -286,8 +286,8 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Age */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="age">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="age">
               Age <span className="text-red-500">*</span>
             </label>
             <input
@@ -299,7 +299,7 @@ export default function PatientProfile({ token }) {
               value={age}
               onChange={(e) => setAge(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
               }`}
               placeholder="Enter your age"
@@ -307,8 +307,8 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Gender */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="gender">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="gender">
               Gender <span className="text-red-500">*</span>
             </label>
             <select
@@ -317,7 +317,7 @@ export default function PatientProfile({ token }) {
               value={gender}
               onChange={(e) => setGender(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
               }`}
             >
@@ -328,8 +328,8 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Phone */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="phone">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="phone">
               Phone Number <span className="text-red-500">*</span>
             </label>
             <input
@@ -339,7 +339,7 @@ export default function PatientProfile({ token }) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
               }`}
               placeholder="Enter your phone number"
@@ -347,12 +347,12 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Marital Status */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium">
               Marital Status <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <label className="flex items-center text-sm md:text-base">
                 <input
                   type="radio"
                   name="maritalStatus"
@@ -365,7 +365,7 @@ export default function PatientProfile({ token }) {
                 />
                 Single
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center text-sm md:text-base">
                 <input
                   type="radio"
                   name="maritalStatus"
@@ -381,8 +381,8 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Household Size */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="householdSize">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="householdSize">
               Household Size <span className="text-red-500">*</span>
             </label>
             <input
@@ -393,7 +393,7 @@ export default function PatientProfile({ token }) {
               value={householdSize}
               onChange={(e) => setHouseholdSize(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
               }`}
               placeholder="Number of people in household"
@@ -401,8 +401,8 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Occupation */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="occupation">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="occupation">
               Occupation
             </label>
             <input
@@ -412,15 +412,15 @@ export default function PatientProfile({ token }) {
               value={occupation}
               onChange={(e) => setOccupation(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
               }`}
             />
           </div>
 
           {/* Living Condition */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="livingCondition">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="livingCondition">
               Living Condition <span className="text-red-500">*</span>
             </label>
             <select
@@ -429,7 +429,7 @@ export default function PatientProfile({ token }) {
               value={livingCondition}
               onChange={(e) => setLivingCondition(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
               }`}
             >
@@ -441,8 +441,8 @@ export default function PatientProfile({ token }) {
           </div>
 
           {/* Travel History */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="travelHistory">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="travelHistory">
               Travel History
             </label>
             <textarea
@@ -451,16 +451,16 @@ export default function PatientProfile({ token }) {
               value={travelHistory}
               onChange={(e) => setTravelHistory(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base resize-none ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-              } resize-none`}
+              }`}
               rows="3"
             />
           </div>
 
           {/* Medical History */}
-          <div className="space-y-2">
-            <label className="block text-green-600 font-medium" htmlFor="medicalHistory">
+          <div className="space-y-1 md:space-y-2">
+            <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="medicalHistory">
               Medical History
             </label>
             <textarea
@@ -469,20 +469,20 @@ export default function PatientProfile({ token }) {
               value={medicalHistory}
               onChange={(e) => setMedicalHistory(e.target.value)}
               disabled={role === "doctor"}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors ${
+              className={`w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-colors text-sm md:text-base resize-none ${
                 role === "doctor" ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-              } resize-none`}
+              }`}
               rows="3"
             />
           </div>
 
           {/* Buttons - Only show for patients */}
           {role === "patient" && (
-            <div className="space-y-3 pt-4">
+            <div className="space-y-2 md:space-y-3 pt-3 md:pt-4">
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:cursor-not-allowed"
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 md:py-3 px-3 md:px-4 rounded-md transition-colors duration-200 disabled:cursor-not-allowed text-sm md:text-base"
               >
                 {loading ? 'Saving...' : profileExists ? 'Update Profile' : 'Create Profile'}
               </button>
@@ -491,7 +491,7 @@ export default function PatientProfile({ token }) {
                 <button 
                   type="button" 
                   onClick={() => supabase.auth.signOut()}
-                  className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200"
+                  className="w-full bg-black hover:bg-gray-800 text-white font-medium py-2 md:py-3 px-3 md:px-4 rounded-md transition-colors duration-200 text-sm md:text-base"
                 >
                   Sign Out
                 </button>
@@ -501,8 +501,8 @@ export default function PatientProfile({ token }) {
 
           {/* Doctor viewing message */}
           {role === "doctor" && (
-            <div className="pt-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 text-blue-700 text-center">
+            <div className="pt-3 md:pt-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 md:p-4 text-xs md:text-sm text-blue-700 text-center">
                 You are viewing this patient's profile in read-only mode.
               </div>
             </div>

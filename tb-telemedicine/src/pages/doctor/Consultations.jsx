@@ -120,9 +120,9 @@ const Consultations = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Consultations</h1>
-        <div className="animate-pulse space-y-4">
+      <div className="p-4 md:p-6">
+        <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-4">Consultations</h1>
+        <div className="animate-pulse space-y-3 md:space-y-4">
           <div className="h-24 bg-gray-200 rounded"></div>
           <div className="h-24 bg-gray-200 rounded"></div>
         </div>
@@ -131,50 +131,50 @@ const Consultations = () => {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Approved Consultations</h1>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-4 md:mb-6">Approved Consultations</h1>
       
       {approvedAppointments.length === 0 ? (
-        <div className="p-8 bg-blue-50 border border-blue-200 rounded-lg text-center">
-          <div className="text-blue-600 text-6xl mb-4">🎥</div>
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">No Approved Consultations</h3>
-          <p className="text-blue-600">
+        <div className="p-6 md:p-8 bg-blue-50 border border-blue-200 rounded-lg text-center">
+          <div className="text-blue-600 text-5xl md:text-6xl mb-3 md:mb-4">🎥</div>
+          <h3 className="text-base md:text-lg font-semibold text-blue-800 mb-2">No Approved Consultations</h3>
+          <p className="text-sm md:text-base text-blue-600">
             When you approve appointments from the Appointments page, they will appear here for video consultations.
           </p>
           <button
             onClick={() => navigate('/doctor/appointments')}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            className="mt-3 md:mt-4 bg-blue-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-blue-700 text-sm md:text-base"
           >
             Go to Appointments
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+        <div className="space-y-3 md:space-y-4">
+          <p className="text-xs md:text-sm text-gray-600">
             You have {approvedAppointments.length} approved consultation{approvedAppointments.length !== 1 ? 's' : ''} ready for video calls.
           </p>
           
           {approvedAppointments.map(appointment => (
-            <div key={appointment.id} className="p-6 border rounded-lg bg-white shadow-md">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+            <div key={appointment.id} className="p-4 md:p-6 border rounded-lg bg-white shadow-md">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
+                <div className="mb-3 md:mb-0">
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900">
                     Patient: {appointment.patient.full_name}
                   </h3>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-xs md:text-sm text-gray-600 mt-1">
                     📅 {formatAppointmentDate(appointment)}
                   </p>
                 </div>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs md:text-sm font-medium w-fit">
                   APPROVED
                 </span>
               </div>
               
-              <div className="flex gap-3">
+              <div className="flex flex-col md:flex-row gap-2 md:gap-3">
                 {/* Chat Button */}
                 <button
                   onClick={() => navigate(`/doctor/chat/${appointment.id}`)}
-                  className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 text-white py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                 >
                   💬 Chat with Patient
                 </button>
@@ -182,7 +182,7 @@ const Consultations = () => {
                 {/* Video Call Button */}
                 <button
                   onClick={() => navigate(`/doctor/consultations/room/${appointment.id}`)}
-                  className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-green-600 text-white py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                 >
                   🎥 Join Video Call
                 </button>
@@ -190,7 +190,7 @@ const Consultations = () => {
                 {/* View Patient Button */}
                 <button
                   onClick={() => navigate(`/doctor/patient/${appointment.patient_id}/patientprofile`)}
-                  className="bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 font-medium transition-colors"
+                  className="bg-gray-600 text-white py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-gray-700 font-medium transition-colors text-sm md:text-base"
                 >
                   👤 View Patient
                 </button>

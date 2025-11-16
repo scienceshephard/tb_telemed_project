@@ -60,30 +60,32 @@ export default function Teleconsultation({ token }) {
 
   
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold text-green-600 mb-4">Your Appointments</h2>
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-6 bg-white rounded-xl shadow-md">
+      <h2 className="text-xl md:text-2xl font-bold text-green-600 mb-4">Your Appointments</h2>
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+        </div>
       ) : appointments.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500 mb-4">No appointments yet.</p>
           <button
             onClick={() => navigate('/patient/patientbookappointment')}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+            className="bg-green-600 text-white px-4 md:px-6 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
           >
             Book an Appointment
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {appointments.map((app) => (
-            <div key={app.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900">
+            <div key={app.id} className="border rounded-lg p-3 md:p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base md:text-lg text-gray-900">
                     Dr. {app.doctor.full_name}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs md:text-sm text-gray-600 mt-1">
                     📅 {(() => {
                       try {
                         const d = app.appointment_date;
@@ -102,7 +104,7 @@ export default function Teleconsultation({ token }) {
                     })()}
                   </p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                   app.status === 'approved' 
                     ? 'bg-green-100 text-green-800'
                     : app.status === 'pending'
@@ -117,10 +119,10 @@ export default function Teleconsultation({ token }) {
                 </span>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col md:flex-row gap-2">
                 {/* Chat Button - Always available */}
                 <button
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-blue-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm md:text-base"
                   onClick={() => navigate(`/patient/chat/${app.id}`)}
                 >
                   💬 Chat
@@ -129,7 +131,7 @@ export default function Teleconsultation({ token }) {
                 {/* Video Call Button - Only for approved */}
                 {app.status === 'approved' ? (
                   <button
-                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                    className="flex-1 bg-green-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm md:text-base"
                     onClick={() => navigate(`/patient/teleconsultation/${app.id}/room`)}
                   >
                     🎥 Join Video Call
@@ -144,7 +146,7 @@ export default function Teleconsultation({ token }) {
                         ? 'Appointment completed'
                         : 'Appointment not available'
                     }
-                    className="flex-1 bg-gray-300 text-gray-600 px-4 py-2 rounded-md cursor-not-allowed"
+                    className="flex-1 bg-gray-300 text-gray-600 px-3 md:px-4 py-2 rounded-md cursor-not-allowed text-sm md:text-base"
                   >
                     🎥 Join Video Call
                   </button>

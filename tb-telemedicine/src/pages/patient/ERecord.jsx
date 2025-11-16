@@ -103,18 +103,18 @@ export default function ERecords({ token }) {
 
   // Add loading check for token
   if (!token || !patientId) {
-    return <div className="p-6">Loading...</div>;
+    return <div className="p-4 md:p-6 text-sm md:text-base">Loading...</div>;
   }
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-xl font-bold text-green-700 mb-4">Patient E-Record</h2>
+    <div className="p-4 md:p-6 bg-white rounded-xl shadow-md max-w-2xl mx-auto">
+      <h2 className="text-lg md:text-xl font-bold text-green-700 mb-3 md:mb-4">Patient E-Record</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
         <div>
-          <label className="block text-gray-700 font-medium mb-1">Prescriptions</label>
+          <label className="block text-xs md:text-sm text-gray-700 font-medium mb-1 md:mb-2">Prescriptions</label>
           <textarea
-            className="w-full border rounded-lg p-2 resize-none"
+            className="w-full border rounded-lg p-2 md:p-3 resize-none text-sm md:text-base"
             value={prescriptions}
             onChange={(e) => setPrescriptions(e.target.value)}
             disabled={role !== "doctor"}
@@ -124,9 +124,9 @@ export default function ERecords({ token }) {
         </div>
 
         <div>
-          <label className="block text-gray-700 font-medium mb-1">Additional Notes</label>
+          <label className="block text-xs md:text-sm text-gray-700 font-medium mb-1 md:mb-2">Additional Notes</label>
           <textarea
-            className="w-full border rounded-lg p-2 resize-none"
+            className="w-full border rounded-lg p-2 md:p-3 resize-none text-sm md:text-base"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={role !== "doctor"}
@@ -139,14 +139,14 @@ export default function ERecords({ token }) {
           <button
             type="submit"
             disabled={loading}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm md:text-base font-medium"
           >
             {loading ? 'Saving...' : recordId ? 'Update Record' : 'Create Record'}
           </button>
         )}
 
         {role === "patient" && (
-          <div className="text-gray-500 text-sm">
+          <div className="text-gray-500 text-xs md:text-sm">
             You can view your medical records here. Only doctors can make changes.
           </div>
         )}

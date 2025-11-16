@@ -102,14 +102,14 @@ export default function BookAppointment({ token }) {
   }
 
   return (
-    <div className="max-w-lg mx-auto p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold text-green-600 mb-4">Book Appointment</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-w-lg mx-auto p-4 md:p-6 bg-white rounded-xl shadow-md">
+      <h2 className="text-xl md:text-2xl font-bold text-green-600 mb-4">Book Appointment</h2>
+      <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
         <select
           required
           value={doctorId}
           onChange={(e) => setDoctorId(e.target.value)}
-          className="w-full px-4 py-2 border rounded-md"
+          className="w-full px-3 md:px-4 py-2 border rounded-md text-sm md:text-base"
         >
           <option value="">Select Doctor</option>
           {doctors.map((doc) => (
@@ -119,20 +119,20 @@ export default function BookAppointment({ token }) {
           ))}
         </select>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3">
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="flex-1 px-4 py-2 border rounded-md"
+            className="flex-1 px-3 md:px-4 py-2 border rounded-md text-sm md:text-base"
           />
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
             required
-            className="flex-1 px-4 py-2 border rounded-md"
+            className="flex-1 px-3 md:px-4 py-2 border rounded-md text-sm md:text-base"
           />
         </div>
 
@@ -140,14 +140,14 @@ export default function BookAppointment({ token }) {
           placeholder="Reason / Notes"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="w-full px-4 py-2 border rounded-md"
+          className="w-full px-3 md:px-4 py-2 border rounded-md text-sm md:text-base"
           rows={3}
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+          className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 text-sm md:text-base font-medium"
         >
           {loading ? "Booking..." : "Book Appointment"}
         </button>

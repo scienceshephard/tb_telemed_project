@@ -273,19 +273,19 @@ export default function LabResults({ token }) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-      <div className="w-full max-w-2xl p-6 bg-white rounded-2xl shadow-md space-y-6">
-        <h2 className="text-2xl font-semibold text-center text-green-600">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 md:p-6 py-4 md:py-8">
+      <div className="w-full max-w-2xl p-4 md:p-6 bg-white rounded-2xl shadow-md space-y-4 md:space-y-6">
+        <h2 className="text-xl md:text-2xl font-semibold text-center text-green-600">
           Lab Results
         </h2>
 
         {loading ? (
-          <p className="text-center text-gray-500">Loading...</p>
+          <p className="text-center text-xs md:text-sm text-gray-500">Loading...</p>
         ) : (
           <>
             {/* X-ray Section */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-medium text-green-600">X-ray Result</h3>
+            <div className="space-y-2 md:space-y-3">
+              <h3 className="text-base md:text-lg font-medium text-green-600">X-ray Result</h3>
               {xrayUrl ? (
                 <>
                   <img
@@ -297,17 +297,17 @@ export default function LabResults({ token }) {
                     <a
                       href={xrayUrl}
                       download="xray-result.png"
-                      className="block text-center font-bold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                      className="block text-center font-medium bg-blue-600 text-white py-2 px-3 md:px-4 rounded-md hover:bg-blue-700 text-sm md:text-base"
                     >
                       Download X-ray
                     </a>
                   )}
                 </>
               ) : (
-                <p className="text-gray-500 italic">No X-ray uploaded yet.</p>
+                <p className="text-xs md:text-sm text-gray-500 italic">No X-ray uploaded yet.</p>
               )}
               {role === "patient" && (
-                <label className="block w-full text-center font-bold bg-green-600 text-white py-2 px-4 rounded-md cursor-pointer hover:bg-green-700">
+                <label className="block w-full text-center font-medium bg-green-600 text-white py-2 px-3 md:px-4 rounded-md cursor-pointer hover:bg-green-700 text-sm md:text-base">
                   {uploading ? "Uploading..." : "Upload X-ray"}
                   <input
                     type="file"
@@ -321,8 +321,8 @@ export default function LabResults({ token }) {
             </div>
 
             {/* Sputum Section */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-medium text-green-600">Sputum Result</h3>
+            <div className="space-y-2 md:space-y-3">
+              <h3 className="text-base md:text-lg font-medium text-green-600">Sputum Result</h3>
               {sputumUrl ? (
                 <>
                   <img
@@ -334,17 +334,17 @@ export default function LabResults({ token }) {
                     <a
                       href={sputumUrl}
                       download="sputum-result.png"
-                      className="block text-center font-bold bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                      className="block text-center font-medium bg-blue-600 text-white py-2 px-3 md:px-4 rounded-md hover:bg-blue-700 text-sm md:text-base"
                     >
                       Download Sputum
                     </a>
                   )}
                 </>
               ) : (
-                <p className="text-gray-500 italic">No sputum uploaded yet.</p>
+                <p className="text-xs md:text-sm text-gray-500 italic">No sputum uploaded yet.</p>
               )}
               {role === "patient" && (
-                <label className="block w-full text-center font-bold bg-green-600 text-white py-2 px-4 rounded-md cursor-pointer hover:bg-green-700">
+                <label className="block w-full text-center font-medium bg-green-600 text-white py-2 px-3 md:px-4 rounded-md cursor-pointer hover:bg-green-700 text-sm md:text-base">
                   {uploading ? "Uploading..." : "Upload Sputum"}
                   <input
                     type="file"

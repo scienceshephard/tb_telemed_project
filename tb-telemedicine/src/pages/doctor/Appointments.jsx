@@ -218,9 +218,9 @@ const Appointments = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Appointments</h1>
-        <div className="animate-pulse space-y-4">
+      <div className="p-4 md:p-6">
+        <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-4">Appointments</h1>
+        <div className="animate-pulse space-y-3 md:space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           {[1, 2, 3].map(i => (
             <div key={i} className="h-24 bg-gray-200 rounded"></div>
@@ -232,14 +232,14 @@ const Appointments = () => {
 
   if (error) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Appointments</h1>
-        <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 font-semibold">Error Loading Appointments</p>
-          <p className="text-red-600 mt-2">{error}</p>
+      <div className="p-4 md:p-6">
+        <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-4">Appointments</h1>
+        <div className="p-4 md:p-6 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm md:text-base text-red-800 font-semibold">Error Loading Appointments</p>
+          <p className="text-xs md:text-sm text-red-600 mt-2">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+            className="mt-3 md:mt-4 bg-red-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-red-700 text-sm md:text-base"
           >
             Retry
           </button>
@@ -249,27 +249,27 @@ const Appointments = () => {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-4">Appointments</h1>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-4">Appointments</h1>
       
       {appointments.length === 0 ? (
-        <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-yellow-800">No appointments found.</p>
-          <p className="text-yellow-600 text-sm mt-2">
+        <div className="p-4 md:p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm md:text-base text-yellow-800">No appointments found.</p>
+          <p className="text-xs md:text-sm text-yellow-600 mt-2">
             When patients book appointments with you, they will appear here.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+        <div className="space-y-3 md:space-y-4">
+          <p className="text-xs md:text-sm text-gray-600">
             Showing {appointments.length} appointment{appointments.length !== 1 ? 's' : ''}
           </p>
           
           {appointments.map((appointment) => (
-            <div key={appointment.id} className="p-4 border rounded-md bg-white shadow">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="text-lg">
+            <div key={appointment.id} className="p-4 md:p-6 border rounded-md bg-white shadow">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-2 md:mb-3">
+                <div className="mb-2 md:mb-0">
+                  <p className="text-base md:text-lg">
                     <strong>Patient:</strong> {appointment.patient_name}
                   </p>
                   {!appointment.has_complete_profile && (
@@ -280,13 +280,13 @@ const Appointments = () => {
                 </div>
                 <button
                   onClick={() => navigate(`/doctor/patient/${appointment.patient_id}/patientprofile`)}
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  className="text-xs md:text-sm text-blue-600 hover:text-blue-800 underline w-fit"
                 >
                   View Profile
                 </button>
               </div>
               
-              <div className="space-y-1 text-sm">
+              <div className="space-y-1 text-xs md:text-sm">
                 <p><strong>Date & Time:</strong> {formatAppointmentDate(appointment)}</p>
                 {appointment.reason && (
                   <p><strong>Reason:</strong> {appointment.reason}</p>
@@ -307,11 +307,11 @@ const Appointments = () => {
 
               {/* Lab results */}
               {(appointment.lab_results?.xray_path || appointment.lab_results?.sputum_path) && (
-                <div className="mt-3 flex gap-2">
+                <div className="mt-2 md:mt-3 flex gap-2 flex-wrap">
                   {appointment.lab_results?.xray_path && (
                     <button
                       onClick={() => downloadAndOpenFile(appointment.lab_results.xray_path)}
-                      className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm"
+                      className="bg-blue-600 text-white px-2 md:px-3 py-1 rounded-md hover:bg-blue-700 text-xs md:text-sm"
                     >
                       📊 View X-ray
                     </button>
@@ -319,7 +319,7 @@ const Appointments = () => {
                   {appointment.lab_results?.sputum_path && (
                     <button
                       onClick={() => downloadAndOpenFile(appointment.lab_results.sputum_path)}
-                      className="bg-yellow-600 text-white px-3 py-1 rounded-md hover:bg-yellow-700 text-sm"
+                      className="bg-yellow-600 text-white px-2 md:px-3 py-1 rounded-md hover:bg-yellow-700 text-xs md:text-sm"
                     >
                       🧪 View Sputum
                     </button>
@@ -328,11 +328,11 @@ const Appointments = () => {
               )}
 
               {/* Action buttons with CHAT */}
-              <div className="mt-3 flex gap-2 flex-wrap">
+              <div className="mt-3 md:mt-4 flex gap-2 flex-wrap">
                 {/* Chat Button - Always Available */}
                 <button
                   onClick={() => navigate(`/doctor/chat/${appointment.id}`)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+                  className="bg-blue-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-blue-700 text-xs md:text-sm font-medium"
                 >
                   💬 Chat
                 </button>
@@ -341,13 +341,13 @@ const Appointments = () => {
                   <>
                     <button
                       onClick={() => updateAppointmentStatus(appointment.id, 'approved')}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium"
+                      className="bg-green-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-green-700 text-xs md:text-sm font-medium"
                     >
                       ✓ Approve
                     </button>
                     <button
                       onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                      className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium"
+                      className="bg-red-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-red-700 text-xs md:text-sm font-medium"
                     >
                       ✗ Cancel
                     </button>
@@ -358,13 +358,13 @@ const Appointments = () => {
                   <>
                     <button
                       onClick={() => navigate(`/doctor/consultations/room/${appointment.id}`)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium"
+                      className="bg-green-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-green-700 text-xs md:text-sm font-medium"
                     >
                       🎥 Join Video Call
                     </button>
                     <button
                       onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                      className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium"
+                      className="bg-indigo-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-indigo-700 text-xs md:text-sm font-medium"
                     >
                       ✓ Mark Complete
                     </button>
@@ -372,7 +372,7 @@ const Appointments = () => {
                 )}
 
                 {appointment.status === 'completed' && (
-                  <span className="text-green-600 text-sm font-medium">
+                  <span className="text-green-600 text-xs md:text-sm font-medium">
                     ✓ Completed
                   </span>
                 )}

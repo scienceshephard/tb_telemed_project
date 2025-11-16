@@ -51,20 +51,20 @@ export default function SymptomChecklist() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-2xl p-6 bg-white rounded-2xl shadow-md">
-        <h2 className="text-2xl font-semibold text-center text-green-600 mb-6">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 py-4 md:py-8 px-4">
+      <div className="w-full max-w-2xl p-4 md:p-6 bg-white rounded-2xl shadow-md">
+        <h2 className="text-xl md:text-2xl font-semibold text-center text-green-600 mb-4 md:mb-6">
           Tuberculosis Symptom Checklist
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
           {Object.keys(responses).map((symptom) => (
-            <div key={symptom} className="space-y-2">
-              <label className="block text-green-600 font-medium capitalize">
+            <div key={symptom} className="space-y-1 md:space-y-2">
+              <label className="block text-xs md:text-sm text-green-600 font-medium capitalize">
                 {symptom.replace(/_/g, " ")}
               </label>
-              <div className="flex gap-4">
-                <label className="flex items-center">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <label className="flex items-center text-sm md:text-base">
                   <input
                     type="radio"
                     name={symptom}
@@ -74,7 +74,7 @@ export default function SymptomChecklist() {
                   />
                   <span className="ml-2">Yes</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center text-sm md:text-base">
                   <input
                     type="radio"
                     name={symptom}
@@ -90,14 +90,14 @@ export default function SymptomChecklist() {
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
+            className="w-full bg-green-600 text-white py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base font-medium"
           >
             Check Risk
           </button>
         </form>
 
         {result && (
-          <div className="mt-6 p-4 text-center border rounded-lg bg-gray-100 text-green-700 font-medium">
+          <div className="mt-4 md:mt-6 p-3 md:p-4 text-center border rounded-lg bg-gray-100 text-green-700 font-medium text-xs md:text-sm">
             {result}
           </div>
         )}
