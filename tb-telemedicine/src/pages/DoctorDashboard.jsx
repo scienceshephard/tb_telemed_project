@@ -6,14 +6,21 @@ const DoctorDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Mobile menu button */}
+      {/* Mobile menu button - Shows hamburger or X based on state */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md"
+        className="md:hidden fixed top-4 right-4 z-50 p-2 bg-transparent hover:bg-gray-200/50 transition-colors rounded-lg"
+        aria-label={sidebarOpen ? "Close menu" : "Open menu"}
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+        {sidebarOpen ? (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        )}
       </button>
 
       {/* Sidebar */}
@@ -85,7 +92,7 @@ const DoctorDashboard = () => {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 md:hidden z-30"
+          className="fixed inset-0 bg-transparent md:hidden z-30"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
