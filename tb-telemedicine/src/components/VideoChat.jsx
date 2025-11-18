@@ -19,6 +19,7 @@ export default function VideoChat({
   const channelRef = useRef(null);
   const makingOfferRef = useRef(false);
   const politeRef = useRef(!isDoctor); // Patient is polite, doctor is impolite
+  const pendingCandidatesRef = useRef([]); // Queue for early ICE candidates
   
   const [isConnected, setIsConnected] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
@@ -155,7 +156,7 @@ export default function VideoChat({
     }
   }
 
-  // Handle incoming signals with perfect negotiation
+  // Handle incoming signals with perfect negotiation + candidate queuing
   async function handleSignal(signal) {
     const pc = peerConnectionRef.current;
     if (!pc) return;
@@ -184,10 +185,29 @@ export default function VideoChat({
             description: pc.localDescription,
           });
         }
+
+        // ⭐ Process any queued ICE candidates now that we have remote description
+        console.log(`Processing ${pendingCandidatesRef.current.length} pending candidates`);
+        while (pendingCandidatesRef.current.length > 0) {
+          const candidate = pendingCandidatesRef.current.shift();
+          try {
+            await pc.addIceCandidate(candidate);
+            console.log('Added queued ICE candidate');
+          } catch (err) {
+            console.error('Error adding queued candidate:', err);
+          }
+        }
+
       } else if (signal.type === 'candidate') {
         try {
-          console.log('Adding ICE candidate');
-          await pc.addIceCandidate(signal.candidate);
+          // ⭐ If we don't have a remote description yet, queue the candidate
+          if (!pc.remoteDescription || !pc.remoteDescription.type) {
+            console.log('Queueing ICE candidate (no remote description yet)');
+            pendingCandidatesRef.current.push(signal.candidate);
+          } else {
+            console.log('Adding ICE candidate');
+            await pc.addIceCandidate(signal.candidate);
+          }
         } catch (err) {
           if (!politeRef.current) {
             console.warn('Error adding ICE candidate:', err);
@@ -203,6 +223,7 @@ export default function VideoChat({
   async function joinRoom() {
     setIsJoining(true);
     setError(null);
+    pendingCandidatesRef.current = []; // Reset queue
 
     try {
       console.log('Starting to join room:', roomName, 'as', isDoctor ? 'doctor' : 'patient');
@@ -234,7 +255,7 @@ export default function VideoChat({
         const signal = payload.new.signal_data;
         const sender = payload.new.sender_name;
         
-        console.log('Received signal from:', sender);
+        console.log('Received signal from:', sender, 'type:', signal.type);
         if (sender !== displayName) {
           handleSignal(signal);
         }
@@ -249,6 +270,9 @@ export default function VideoChat({
       channelRef.current = channel;
 
       // ⭐ CRITICAL FIX: Fetch and process existing signals
+      // Wait a tiny bit to ensure subscription is fully active
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       console.log('Fetching existing signals...');
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       
@@ -264,7 +288,16 @@ export default function VideoChat({
         console.error('Error fetching existing signals:', fetchError);
       } else if (existingSignals && existingSignals.length > 0) {
         console.log(`Processing ${existingSignals.length} existing signals`);
-        for (const signal of existingSignals) {
+        
+        // ⭐ Process descriptions first, then candidates
+        const descriptions = existingSignals.filter(s => s.signal_data.type === 'description');
+        const candidates = existingSignals.filter(s => s.signal_data.type === 'candidate');
+        
+        for (const signal of descriptions) {
+          await handleSignal(signal.signal_data);
+        }
+        
+        for (const signal of candidates) {
           await handleSignal(signal.signal_data);
         }
       } else {
@@ -310,6 +343,7 @@ export default function VideoChat({
       channelRef.current = null;
     }
 
+    pendingCandidatesRef.current = [];
     setIsConnected(false);
     setShowPrejoin(true);
     
