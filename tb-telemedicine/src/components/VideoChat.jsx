@@ -199,7 +199,7 @@ export default function VideoChat({
     }
   }
 
-  // Join room
+  // Join room - FIXED VERSION
   async function joinRoom() {
     setIsJoining(true);
     setError(null);
@@ -207,6 +207,14 @@ export default function VideoChat({
     try {
       console.log('Starting to join room:', roomName, 'as', isDoctor ? 'doctor' : 'patient');
       
+      // Clear old signals from this room (optional but recommended)
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      await supabase
+        .from('video_signals')
+        .delete()
+        .eq('room_name', roomName)
+        .lt('created_at', tenMinutesAgo);
+
       await initializeMedia();
       console.log('Media initialized successfully');
 
@@ -239,6 +247,30 @@ export default function VideoChat({
       });
 
       channelRef.current = channel;
+
+      // ⭐ CRITICAL FIX: Fetch and process existing signals
+      console.log('Fetching existing signals...');
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      
+      const { data: existingSignals, error: fetchError } = await supabase
+        .from('video_signals')
+        .select('*')
+        .eq('room_name', roomName)
+        .neq('sender_name', displayName)
+        .gte('created_at', fiveMinutesAgo)
+        .order('created_at', { ascending: true });
+
+      if (fetchError) {
+        console.error('Error fetching existing signals:', fetchError);
+      } else if (existingSignals && existingSignals.length > 0) {
+        console.log(`Processing ${existingSignals.length} existing signals`);
+        for (const signal of existingSignals) {
+          await handleSignal(signal.signal_data);
+        }
+      } else {
+        console.log('No existing signals found - waiting for other participant');
+      }
+
       setShowPrejoin(false);
       setIsJoining(false);
       console.log('Successfully joined room');
@@ -479,7 +511,7 @@ export default function VideoChat({
                     : 'bg-green-100 text-green-700 border-2 border-green-300'
                 }`}
               >
-                {videoMuted ? '🔹 Camera Off' : '📷 Camera On'}
+                {videoMuted ? '📹 Camera Off' : '📷 Camera On'}
               </button>
             </div>
 
@@ -539,7 +571,7 @@ export default function VideoChat({
                 : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur'
             }`}
           >
-            {videoMuted ? '🔹 Camera On' : '📷 Camera Off'}
+            {videoMuted ? '📹 Camera On' : '📷 Camera Off'}
           </button>
 
           {appointmentId && currentUserId && otherUserId && (
