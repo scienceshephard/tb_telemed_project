@@ -20,13 +20,19 @@ export default function Teleconsultation({ token }) {
           return;
         }
 
+        console.log('🔍 Fetching appointments for patient:', user.id);
+
+        // FIXED: Filter out completed appointments and only show THIS patient's appointments
         const { data: apps, error: appsError } = await supabase
           .from('appointments')
           .select('id, appointment_date, appointment_time, status, doctor_id')
           .eq('patient_id', user.id)
+          .neq('status', 'completed') // Exclude completed appointments
           .order('appointment_date', { ascending: true });
 
         if (appsError) throw appsError;
+
+        console.log('✅ Found appointments:', apps);
 
         const doctorIds = Array.from(new Set(apps.map((a) => a.doctor_id).filter(Boolean)));
         let doctorsMap = {};
@@ -56,6 +62,24 @@ export default function Teleconsultation({ token }) {
     }
 
     fetchAppointments();
+
+    // Subscribe to real-time changes
+    const subscription = supabase
+      .channel('patient-appointments')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'appointments',
+        filter: `patient_id=eq.${token?.user?.id}`
+      }, () => {
+        console.log('🔔 Appointment changed, refreshing...');
+        fetchAppointments();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [token]);
 
   
@@ -68,7 +92,7 @@ export default function Teleconsultation({ token }) {
         </div>
       ) : appointments.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500 mb-4">No appointments yet.</p>
+          <p className="text-gray-500 mb-4">No active appointments.</p>
           <button
             onClick={() => navigate('/patient/patientbookappointment')}
             className="bg-green-600 text-white px-4 md:px-6 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
@@ -109,8 +133,6 @@ export default function Teleconsultation({ token }) {
                     ? 'bg-green-100 text-green-800'
                     : app.status === 'pending'
                     ? 'bg-yellow-100 text-yellow-800'
-                    : app.status === 'completed'
-                    ? 'bg-blue-100 text-blue-800'
                     : app.status === 'cancelled'
                     ? 'bg-red-100 text-red-800'
                     : 'bg-gray-100 text-gray-800'
@@ -142,8 +164,6 @@ export default function Teleconsultation({ token }) {
                     title={
                       app.status === 'pending' 
                         ? 'Waiting for doctor to approve'
-                        : app.status === 'completed'
-                        ? 'Appointment completed'
                         : 'Appointment not available'
                     }
                     className="flex-1 bg-gray-300 text-gray-600 px-3 md:px-4 py-2 rounded-md cursor-not-allowed text-sm md:text-base"

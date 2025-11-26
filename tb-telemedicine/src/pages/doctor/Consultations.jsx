@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../client';
@@ -10,6 +9,23 @@ const Consultations = () => {
 
   useEffect(() => {
     fetchApprovedAppointments();
+
+    // Subscribe to real-time changes
+    const subscription = supabase
+      .channel('doctor-consultations')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'appointments',
+      }, () => {
+        console.log('🔔 Appointment changed, refreshing consultations...');
+        fetchApprovedAppointments();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function fetchApprovedAppointments() {
@@ -27,6 +43,7 @@ const Consultations = () => {
 
       console.log('👨‍⚕️ Doctor ID:', userData.user.id);
 
+      // FIXED: Only fetch approved AND non-completed appointments for THIS doctor
       const { data, error } = await supabase
         .from('appointments')
         .select('id, appointment_date, appointment_time, status, patient_id')

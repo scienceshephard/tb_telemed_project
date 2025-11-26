@@ -16,56 +16,89 @@ export default function DoctorVideoChatWrapper({ token }) {
     async function load() {
       setLoading(true)
       
-      // Fetch appointment
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('id, patient_id, doctor_id, status')
-        .eq('id', appointmentId)
-        .single()
+      try {
+        // Validate inputs
+        if (!token?.user?.id || !appointmentId) {
+          console.error('❌ Missing token or appointment ID');
+          setLoading(false);
+          return;
+        }
 
-      if (!mounted) return
-      if (error) {
-        console.error('Error loading appointment for doctor video chat:', error)
-        setLoading(false)
-        return
-      }
+        console.log('🔍 Loading video chat for appointment:', appointmentId);
+        console.log('👤 Current doctor:', token?.user?.id);
 
-      setAppointment(data)
-
-      // Fetch patient info
-      const { data: patientData, error: patientError } = await supabase
-        .from('patient_profiles')
-        .select('user_id, full_name')
-        .eq('user_id', data.patient_id)
-        .single()
-
-      if (!patientError && patientData) {
-        setPatientInfo(patientData)
-      } else {
-        // Fallback to profiles table
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .eq('id', data.patient_id)
+        // Fetch appointment
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('id, patient_id, doctor_id, status')
+          .eq('id', appointmentId)
           .single()
+
+        if (!mounted) return
         
-        if (profileData) {
-          setPatientInfo({ user_id: profileData.id, full_name: profileData.full_name })
+        if (error) {
+          console.error('❌ Error loading appointment for doctor video chat:', error)
+          setLoading(false)
+          return
+        }
+
+        console.log('✅ Appointment found:', data);
+        setAppointment(data)
+
+        // Fetch patient info
+        const { data: patientData, error: patientError } = await supabase
+          .from('patient_profiles')
+          .select('user_id, full_name')
+          .eq('user_id', data.patient_id)
+          .single()
+
+        if (!patientError && patientData) {
+          setPatientInfo(patientData)
+          console.log('✅ Patient info:', patientData);
+        } else {
+          // Fallback to profiles table
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .eq('id', data.patient_id)
+            .single()
+          
+          if (profileData) {
+            setPatientInfo({ user_id: profileData.id, full_name: profileData.full_name })
+            console.log('✅ Patient info (from profiles):', profileData);
+          }
+        }
+
+        // Resolve current user id - use token as primary source
+        const currentId = token?.user?.id;
+
+        if (!currentId) {
+          console.error('❌ No current doctor ID available');
+          setAuthorized(false);
+          setLoading(false);
+          return;
+        }
+
+        // Authorization check: must be the assigned doctor
+        const isAuthorizedDoctor = currentId === data.doctor_id;
+        
+        console.log('🔐 Auth check - assigned doctor:', data.doctor_id, 'current:', currentId, 'authorized:', isAuthorizedDoctor);
+
+        if (isAuthorizedDoctor) {
+          setAuthorized(true)
+          console.log('✅ Doctor authorized for this appointment');
+        } else {
+          setAuthorized(false)
+          console.warn('❌ Doctor not authorized - not the assigned doctor');
+        }
+      } catch (err) {
+        console.error('❌ Unexpected error in doctor video chat setup:', err);
+        setAuthorized(false);
+      } finally {
+        if (mounted) {
+          setLoading(false);
         }
       }
-
-      // Resolve current user id
-      const userResp = await supabase.auth.getUser()
-      const currentId = userResp?.data?.user?.id || token?.user?.id
-
-      // Basic client-side guard
-      if (currentId && currentId === data.doctor_id) {
-        setAuthorized(true)
-      } else {
-        setAuthorized(false)
-      }
-
-      setLoading(false)
     }
 
     load()

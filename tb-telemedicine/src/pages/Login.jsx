@@ -10,7 +10,6 @@ const Login = ({ token, setToken }) => {
     password: "",
   });
 
-  console.log(formData);
 
   function handleChange(event) {
     setFormData((prevFormData) => {
@@ -33,9 +32,6 @@ const Login = ({ token, setToken }) => {
         alert(error.message);
         return;
       }
-
-      console.log("User:", data.user);
-      console.log("Session:", data.session);
 
       setToken(data);
       

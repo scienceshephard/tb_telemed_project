@@ -34,14 +34,18 @@ export default function PatientProfile({ token }) {
   useEffect(() => {
     async function initialize() {
       try {
-        // Get the current viewer's info
+        // Get the current viewer's info from token (primary source)
         let viewerId = token?.user?.id;
         let viewerEmail = token?.user?.email;
         
+        console.log('🔍 Initializing profile - token user:', viewerId, viewerEmail);
+        
+        // If no token, try to get from Supabase auth (fallback)
         if (!viewerId) {
           const { data: userData } = await supabase.auth.getUser();
           viewerId = userData?.user?.id;
           viewerEmail = userData?.user?.email;
+          console.log('🔍 Retrieved from Supabase auth:', viewerId, viewerEmail);
         }
 
         // Get viewer's role
@@ -54,52 +58,76 @@ export default function PatientProfile({ token }) {
 
           if (!error && data) {
             setRole(data.role);
+            console.log('✅ User role:', data.role);
           }
         }
 
         // Resolve which patient profile to load
-        let targetUserId = resolvedUserId;
+        let targetUserId = null;
         
-        if (!targetUserId) {
-          if (isDoctor && id) {
-            targetUserId = id;
-          } else if (viewerId) {
-            targetUserId = viewerId;
-          } else {
-            // Try sessionStorage as last resort
-            try {
-              const stored = sessionStorage.getItem('token');
-              if (stored) {
-                const parsed = JSON.parse(stored);
-                if (parsed?.user?.id) {
-                  targetUserId = parsed.user.id;
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing session storage:', e);
-            }
-          }
-          
+        // If doctor is viewing a specific patient (has URL param)
+        if (isDoctor && id) {
+          targetUserId = id;
+          console.log('📋 Doctor viewing patient:', targetUserId);
+        } 
+        // Otherwise load current user's profile
+        else {
+          targetUserId = viewerId;
+          console.log('📋 Loading own profile:', targetUserId);
+        }
+        
+        if (targetUserId) {
           setResolvedUserId(targetUserId);
         }
 
-        // If doctor is viewing someone else's profile, get that patient's email
+        // Set email based on context
         if (isDoctor && id && id !== viewerId) {
-          const { data: patientData } = await supabase.auth.admin.getUserById(id);
-          if (patientData?.user?.email) {
-            setPatientEmail(patientData.user.email);
+          // Doctor viewing another patient - get PATIENT's email from profiles table
+          try {
+            const { data: patientProfile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, full_name, email')
+              .eq('id', id)
+              .single();
+            
+            if (profileError) {
+              console.warn('Error fetching patient profile:', profileError);
+            }
+            
+            if (patientProfile) {
+              console.log('✅ Patient profile from profiles table:', patientProfile);
+              // Get email from auth.users via RPC or use a different method
+              // Since we can't directly access auth.users, we need to get it differently
+              
+              // Try to get user data using Supabase admin (if available) or store email in profiles
+              const { data: { user: patientAuthUser }, error: authError } = await supabase.auth.admin.getUserById(id);
+              
+              if (!authError && patientAuthUser?.email) {
+                setPatientEmail(patientAuthUser.email);
+                console.log('✅ Patient email from auth:', patientAuthUser.email);
+              } else {
+                // Fallback: Create an RPC function to get email or store it in profiles table
+                console.warn('Could not fetch patient email, using fallback');
+                setPatientEmail('Email not available');
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching patient data:', err);
+            setPatientEmail('Email not available');
           }
         } else {
-          setPatientEmail(viewerEmail || '');
+          // User viewing own profile - use their own email
+          setPatientEmail(viewerEmail || token?.user?.email || '');
+          console.log('✅ Own email:', viewerEmail);
         }
 
       } catch (err) {
-        console.error('Error in initialization:', err);
+        console.error('❌ Error in initialization:', err);
       }
     }
 
     initialize();
-  }, [token, id, isDoctor, resolvedUserId]);
+  }, [token, id, isDoctor]);
 
   // Fetch patient profile
   useEffect(() => {
@@ -252,7 +280,7 @@ export default function PatientProfile({ token }) {
             />
           </div>
 
-          {/* Email Field */}
+          {/* Email Field - FIXED */}
           <div className="space-y-1 md:space-y-2">
             <label className="block text-xs md:text-sm text-green-600 font-medium" htmlFor="email">
               Email
@@ -260,7 +288,7 @@ export default function PatientProfile({ token }) {
             <input 
               id="email" 
               type="text" 
-              value={patientEmail || token?.user?.email || ''} 
+              value={patientEmail} 
               disabled 
               className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed text-sm md:text-base"
             />

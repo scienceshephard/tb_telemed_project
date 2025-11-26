@@ -16,45 +16,79 @@ export default function VideoChatWrapper({ token }) {
     async function load() {
       setLoading(true)
       
-      // Fetch appointment
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('id, patient_id, doctor_id, status')
-        .eq('id', appointmentId)
-        .single()
+      try {
+        // Validate token exists
+        if (!token?.user?.id && !appointmentId) {
+          console.error('❌ No token or appointment ID');
+          setLoading(false);
+          return;
+        }
 
-      if (!mounted) return
-      if (error) {
-        console.error('Error loading appointment for video chat:', error)
-        setLoading(false)
-        return
+        console.log('🔍 Loading video chat for appointment:', appointmentId);
+        console.log('👤 Current user:', token?.user?.id);
+
+        // Fetch appointment
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('id, patient_id, doctor_id, status')
+          .eq('id', appointmentId)
+          .single()
+
+        if (!mounted) return
+        
+        if (error) {
+          console.error('❌ Error loading appointment for video chat:', error)
+          setLoading(false)
+          return
+        }
+
+        console.log('✅ Appointment found:', data);
+        setAppointment(data)
+
+        // Fetch doctor info
+        const { data: doctorData, error: doctorError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('id', data.doctor_id)
+          .single()
+
+        if (!doctorError && doctorData) {
+          setDoctorInfo(doctorData)
+          console.log('✅ Doctor info:', doctorData);
+        }
+
+        // Resolve current user id - use token as primary source
+        const currentId = token?.user?.id;
+
+        if (!currentId) {
+          console.error('❌ No current user ID available');
+          setAuthorized(false);
+          setLoading(false);
+          return;
+        }
+
+        // Authorization check: user must be either patient or doctor
+        const isPatient = currentId === data.patient_id;
+        const isDoctor = currentId === data.doctor_id;
+        
+        console.log('🔐 Auth check - isPatient:', isPatient, 'isDoctor:', isDoctor);
+
+        if (isPatient || isDoctor) {
+          setAuthorized(true)
+          console.log('✅ User authorized for this appointment');
+        } else {
+          setAuthorized(false)
+          console.warn('❌ User not authorized - not patient or doctor');
+          console.log("currentId: ", currentId, "id: ", data.id, " patient_id: ", data.patient_id, " doctor_id: ", data.doctor_id, "token: ", token);
+        }
+      } catch (err) {
+        console.error('❌ Unexpected error in video chat setup:', err);
+        setAuthorized(false);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-
-      setAppointment(data)
-
-      // Fetch doctor info
-      const { data: doctorData, error: doctorError } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('id', data.doctor_id)
-        .single()
-
-      if (!doctorError && doctorData) {
-        setDoctorInfo(doctorData)
-      }
-
-      // Resolve current user id
-      const userResp = await supabase.auth.getUser()
-      const currentId = userResp?.data?.user?.id || token?.user?.id
-
-      // Basic client-side guard
-      if (currentId && (currentId === data.patient_id || currentId === data.doctor_id)) {
-        setAuthorized(true)
-      } else {
-        setAuthorized(false)
-      }
-
-      setLoading(false)
     }
 
     load()
@@ -121,7 +155,7 @@ export default function VideoChatWrapper({ token }) {
         <div className="p-6 bg-red-50 border border-red-200 rounded-lg max-w-md">
           <div className="text-red-800 font-semibold text-lg mb-2">🚫 Access Denied</div>
           <p className="text-red-600 mb-4">
-            You are not authorized to join this consultation.
+            You are not authorized to join this consultation. Make sure you're logged in with the correct account.
           </p>
           <button
             onClick={() => navigate('/patient/teleconsultation')}
